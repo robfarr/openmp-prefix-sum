@@ -34,13 +34,22 @@ int main() {
  */
 int* prefix_scan(const int* input, size_t len) {
 
+    // Create a copy of the input, so that we don't mutate the original input
     int* output = calloc(len, sizeof(int));
+    memcpy(output, input, sizeof(int)*len);
 
-    for (int apart=0; apart<len; apart++) {
+    // 1 apart, 2 apart, 4 apart ...
+    for (int apart=1; apart<=len; apart*=2) {
 
+        // Create a copy so that we can safely do the sum in parallel by
+        // removing the intra-array dependency
+        int read[len];
+        memcpy(read, output, sizeof(int)*len);
+
+        // Compute the sum of pairs of values
         #pragma omp parallel for
-        for (int i=apart; i<len; i++) {
-            output[i] += input[i-apart];
+        for (int i=apart; i<=len; i++) {
+            output[i] += read[i-apart];
         }
 
     }
